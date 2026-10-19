@@ -3,22 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type Anthropic from '@anthropic-ai/sdk';
 import type { SDKAssistantMessage, SDKPartialAssistantMessage, SDKResultSuccess, SDKSystemMessage, SDKUserMessage } from '@anthropic-ai/claude-agent-sdk';
 
-// Beta event-stream type aliases. The `Anthropic` namespace re-exports
-// these from `@anthropic-ai/sdk/resources/beta/messages.js`, but
-// importing that subpath directly trips the `local/code-import-patterns`
-// allowlist (the agentHost rule only permits the bare
-// `@anthropic-ai/sdk` specifier). Local aliases via the `Anthropic`
-// import keep the body of this file readable without extending the
-// allowlist.
-export type BetaRawContentBlockDeltaEvent = Anthropic.Beta.BetaRawContentBlockDeltaEvent;
-export type BetaRawContentBlockStartEvent = Anthropic.Beta.BetaRawContentBlockStartEvent;
-export type BetaRawContentBlockStopEvent = Anthropic.Beta.BetaRawContentBlockStopEvent;
-export type BetaRawMessageStartEvent = Anthropic.Beta.BetaRawMessageStartEvent;
-export type BetaRawMessageStopEvent = Anthropic.Beta.BetaRawMessageStopEvent;
-export type BetaContentBlock = Anthropic.Beta.BetaContentBlock;
+// Beta event-stream type aliases derived from the SDK's event union so
+// fixtures remain compatible even when npm resolves a nested Anthropic
+// SDK copy for @anthropic-ai/claude-agent-sdk.
+export type BetaRawContentBlockDeltaEvent = Extract<SDKPartialAssistantMessage['event'], { type: 'content_block_delta' }>;
+export type BetaRawContentBlockStartEvent = Extract<SDKPartialAssistantMessage['event'], { type: 'content_block_start' }>;
+export type BetaRawContentBlockStopEvent = Extract<SDKPartialAssistantMessage['event'], { type: 'content_block_stop' }>;
+export type BetaRawMessageStartEvent = Extract<SDKPartialAssistantMessage['event'], { type: 'message_start' }>;
+export type BetaRawMessageStopEvent = Extract<SDKPartialAssistantMessage['event'], { type: 'message_stop' }>;
+export type BetaContentBlock = SDKAssistantMessage['message']['content'][number];
 
 /**
  * Static fixture uuid used by every helper that needs to emit a
@@ -119,7 +114,6 @@ export function makeMessageStart(messageId: string = 'msg_test'): BetaRawMessage
 			content: [],
 			stop_reason: null,
 			stop_sequence: null,
-			stop_details: null,
 			container: null,
 			context_management: null,
 			usage: {
@@ -135,7 +129,7 @@ export function makeMessageStart(messageId: string = 'msg_test'): BetaRawMessage
 				speed: 'standard',
 			},
 		},
-	};
+	} as BetaRawMessageStartEvent;
 }
 
 export function makeContentBlockStartText(index: number): BetaRawContentBlockStartEvent {
@@ -246,7 +240,7 @@ export function makeAssistantMessage(
 		parent_tool_use_id: null,
 		uuid: TEST_UUID,
 		session_id: sessionId,
-	};
+	} as SDKAssistantMessage;
 }
 
 /**
